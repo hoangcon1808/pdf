@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Resizer Premium</title>
+    <title>PDF Resizer Tool - Nâng cấp tính năng</title>
     <style>
         :root {
             --primary-blue: #007BFF;
@@ -39,6 +39,7 @@
             padding: 0 15px;
         }
 
+        /* Controls Section */
         .controls {
             background: var(--white);
             padding: 20px;
@@ -75,6 +76,7 @@
         .dynamic-group { display: flex; gap: 10px; width: 100%; }
         .custom-size-inputs { display: none; gap: 10px; width: 100%; }
 
+        /* Style chung cho nút bấm chính */
         button {
             background-color: var(--primary-blue);
             color: var(--white);
@@ -90,6 +92,7 @@
         @media (min-width: 992px) { button { width: auto; min-width: 150px; } }
         button:hover { background-color: var(--hover-blue); border-color: var(--hover-blue); }
         
+        /* Trạng thái nút bị khóa khi chưa có file */
         button:disabled {
             background-color: #e9ecef !important;
             color: #adb5bd !important;
@@ -97,6 +100,7 @@
             cursor: not-allowed !important;
         }
 
+        /* Preview Windows Grid */
         .preview-grid {
             display: grid;
             grid-template-columns: 1fr;
@@ -115,6 +119,7 @@
             height: 580px;
         }
 
+        /* Thanh tiêu đề tích hợp nút bấm bên trong ô kết quả */
         .box-header {
             display: flex;
             justify-content: space-between;
@@ -134,6 +139,7 @@
 
         .btn-group { display: flex; gap: 8px; }
 
+        /* Nút phụ cỡ nhỏ trong ô kết quả */
         .btn-small {
             padding: 6px 12px;
             font-size: 12px;
@@ -142,6 +148,7 @@
             border-radius: 4px;
         }
 
+        /* Kiểu nút màu trắng viền xanh */
         .btn-outline {
             background-color: transparent;
             color: var(--primary-blue);
@@ -178,7 +185,7 @@
             </select>
 
             <div class="dynamic-group">
-                <input type="number" id="scaleInput" value="80" min="10" max="300" placeholder="Nhập %">
+                <input type="number" id="scaleInput" value="80" min="10" max="300">
                 
                 <select id="standardSizeSelect" style="display: none;">
                     <option value="A4" selected>Khổ A4 (210 x 297 mm)</option>
@@ -234,44 +241,16 @@
         const processBtn = document.getElementById('processBtn');
         const loadingText = document.getElementById('loadingText');
 
+        // Các nút bấm mới thêm
         const openOriginalBtn = document.getElementById('openOriginalBtn');
         const openResultBtn = document.getElementById('openResultBtn');
         const downloadResultBtn = document.getElementById('downloadResultBtn');
 
         let currentFile = null;
-        let originalUrlString = ""; 
-        let resultBlobTarget = null; 
+        let originalUrlString = ""; // Lưu đường dẫn file gốc phục vụ nút Mở
+        let resultBlobTarget = null; // Lưu Blob đã xử lý để download
 
-        // Hàm hỗ trợ ép hiển thị PDF trên tab mới bằng Data URI (Base64)
-        function viewPdfInNewTab(blobTarget) {
-            const reader = new FileReader();
-            reader.readAsDataURL(blobTarget);
-            reader.onloadend = function () {
-                const base64Data = reader.result;
-                const newTab = window.open();
-                if (!newTab) {
-                    alert('Vui lòng cho phép trình duyệt mở cửa sổ Pop-up để xem PDF!');
-                    return;
-                }
-                newTab.document.write(`
-                    <html>
-                        <head>
-                            <title>Xem trực tuyến PDF</title>
-                            <style>
-                                body { margin: 0; padding: 0; background-color: #525659; overflow: hidden; }
-                                iframe { width: 100%; height: 100%; border: none; }
-                            </style>
-                        </head>
-                        <body>
-                            <iframe src="${base64Data}"></iframe>
-                        </body>
-                    </html>
-                `);
-                newTab.document.close();
-            };
-        }
-
-        // Bộ lọc UI
+        // Bộ lọc ẩn hiện ô nhập liệu
         resizeType.addEventListener('change', () => {
             scaleInput.style.display = 'none';
             standardSizeSelect.style.display = 'none';
@@ -281,19 +260,22 @@
             else if (resizeType.value === 'custom') customSizeGroup.style.display = 'flex';
         });
 
-        // Xử lý Input
+        // Kích hoạt khi có file cục bộ
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 currentFile = file;
                 urlInput.value = ''; 
+                
                 if(originalUrlString.startsWith("blob:")) URL.revokeObjectURL(originalUrlString);
                 originalUrlString = URL.createObjectURL(file);
+                
                 originalPreview.src = originalUrlString;
-                openOriginalBtn.disabled = false;
+                openOriginalBtn.disabled = false; // Kích hoạt nút Mở File Gốc
             }
         });
 
+        // Kích hoạt khi nhập Link URL từ xa
         urlInput.addEventListener('input', () => {
             const url = urlInput.value.trim();
             if (url) {
@@ -301,22 +283,26 @@
                 currentFile = null;
                 originalUrlString = url;
                 originalPreview.src = url;
-                openOriginalBtn.disabled = false;
+                openOriginalBtn.disabled = false; // Kích hoạt nút Mở File Gốc
             } else {
                 openOriginalBtn.disabled = true;
             }
         });
 
-        // Sự kiện các nút công cụ
+        // Thao tác nút Mở rộng của File Gốc
         openOriginalBtn.addEventListener('click', () => {
-            if (currentFile) viewPdfInNewTab(currentFile);
-            else if (originalUrlString) window.open(originalUrlString, '_blank');
+            if (originalUrlString) window.open(originalUrlString, '_blank');
         });
 
+        // Thao tác nút Mở rộng của File Kết Quả
         openResultBtn.addEventListener('click', () => {
-            if (resultBlobTarget) viewPdfInNewTab(resultBlobTarget);
+            if (resultBlobTarget) {
+                const url = URL.createObjectURL(resultBlobTarget);
+                window.open(url, '_blank');
+            }
         });
 
+        // Thao tác nút Tải xuống File Kết Quả
         downloadResultBtn.addEventListener('click', () => {
             if (resultBlobTarget) {
                 const url = URL.createObjectURL(resultBlobTarget);
@@ -330,7 +316,7 @@
             }
         });
 
-        // Logic gửi API
+        // Nút Gửi xử lý chính
         processBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
             if (!currentFile && !url) {
@@ -344,6 +330,7 @@
 
             processBtn.disabled = true;
             loadingText.style.display = 'block';
+            
             openResultBtn.disabled = true;
             downloadResultBtn.disabled = true;
             resultPreview.src = '';
@@ -364,12 +351,16 @@
                 const response = await fetch('/api/resize', { method: 'POST', body: formData });
                 if (!response.ok) {
                     const err = await response.json();
-                    throw new Error(err.error || 'Lỗi xử lý hệ thống.');
+                    throw new Error(err.error || 'Lỗi xử lý.');
                 }
 
+                // Lưu blob vào bộ nhớ ứng dụng
                 resultBlobTarget = await response.blob();
+                
+                // Hiển thị trực tiếp vào ô iframe kết quả
                 resultPreview.src = URL.createObjectURL(resultBlobTarget);
                 
+                // Giải phóng kích hoạt toàn bộ bộ nút thao tác kết quả
                 openResultBtn.disabled = false;
                 downloadResultBtn.disabled = false;
 
