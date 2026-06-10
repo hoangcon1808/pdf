@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PDF Resizer Tool - Khổ Giấy & Tùy Chỉnh</title>
+    <title>PDF Resizer Tool - Nâng cấp tính năng</title>
     <style>
         :root {
             --primary-blue: #007BFF;
@@ -51,7 +51,6 @@
             gap: 15px;
         }
 
-        /* Hỗ trợ responsive dàn hàng ngang trên màn hình lớn */
         @media (min-width: 992px) {
             .controls {
                 flex-direction: row;
@@ -74,37 +73,32 @@
 
         input:focus, select:focus { border-color: var(--primary-blue); }
 
-        /* Khung chứa các ô nhập động */
-        .dynamic-group {
-            display: flex;
-            gap: 10px;
-            width: 100%;
-        }
+        .dynamic-group { display: flex; gap: 10px; width: 100%; }
+        .custom-size-inputs { display: none; gap: 10px; width: 100%; }
 
-        .custom-size-inputs {
-            display: none; /* Ẩn mặc định */
-            gap: 10px;
-            width: 100%;
-        }
-
+        /* Style chung cho nút bấm chính */
         button {
             background-color: var(--primary-blue);
             color: var(--white);
-            border: none;
+            border: 1px solid var(--primary-blue);
             padding: 12px 25px;
             border-radius: 6px;
             cursor: pointer;
             font-weight: bold;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
             width: 100%;
         }
 
-        @media (min-width: 992px) {
-            button { width: auto; min-width: 150px; }
+        @media (min-width: 992px) { button { width: auto; min-width: 150px; } }
+        button:hover { background-color: var(--hover-blue); border-color: var(--hover-blue); }
+        
+        /* Trạng thái nút bị khóa khi chưa có file */
+        button:disabled {
+            background-color: #e9ecef !important;
+            color: #adb5bd !important;
+            border-color: #ced4da !important;
+            cursor: not-allowed !important;
         }
-
-        button:hover { background-color: var(--hover-blue); }
-        button:disabled { background-color: #a0cbfc; cursor: not-allowed; }
 
         /* Preview Windows Grid */
         .preview-grid {
@@ -113,9 +107,7 @@
             gap: 20px;
         }
 
-        @media (min-width: 768px) {
-            .preview-grid { grid-template-columns: 1fr 1fr; }
-        }
+        @media (min-width: 768px) { .preview-grid { grid-template-columns: 1fr 1fr; } }
 
         .pdf-box {
             background: var(--white);
@@ -124,17 +116,45 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.05);
             display: flex;
             flex-direction: column;
-            height: 550px;
+            height: 580px;
         }
 
-        .pdf-box h3 {
-            color: var(--primary-blue);
-            margin-bottom: 12px;
-            text-align: center;
-            font-size: 15px;
+        /* Thanh tiêu đề tích hợp nút bấm bên trong ô kết quả */
+        .box-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
             border-bottom: 2px solid var(--border);
-            padding-bottom: 8px;
+            padding-bottom: 10px;
+            margin-bottom: 12px;
+            gap: 10px;
         }
+
+        .box-header h3 {
+            color: var(--primary-blue);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-group { display: flex; gap: 8px; }
+
+        /* Nút phụ cỡ nhỏ trong ô kết quả */
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 12px;
+            min-width: auto;
+            width: auto;
+            border-radius: 4px;
+        }
+
+        /* Kiểu nút màu trắng viền xanh */
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-blue);
+            border: 1px solid var(--primary-blue);
+        }
+        .btn-outline:hover { background-color: rgba(0, 123, 255, 0.08); }
 
         iframe {
             flex: 1;
@@ -150,7 +170,7 @@
 <body>
 
     <div class="header">
-        <h3>PDF Resizer & Custom Paper Size</h3>
+        <h3>PDF Resizer Premium</h3>
     </div>
 
     <div class="container">
@@ -165,7 +185,7 @@
             </select>
 
             <div class="dynamic-group">
-                <input type="number" id="scaleInput" value="80" min="10" max="300" placeholder="Nhập % tỷ lệ (Ví dụ: 80)">
+                <input type="number" id="scaleInput" value="80" min="10" max="300">
                 
                 <select id="standardSizeSelect" style="display: none;">
                     <option value="A4" selected>Khổ A4 (210 x 297 mm)</option>
@@ -174,8 +194,8 @@
                 </select>
 
                 <div id="customSizeGroup" class="custom-size-inputs">
-                    <input type="number" id="customWidth" placeholder="Rộng (mm)" min="1">
-                    <input type="number" id="customHeight" placeholder="Cao (mm)" min="1">
+                    <input type="number" id="customWidth" placeholder="Rộng (mm)">
+                    <input type="number" id="customHeight" placeholder="Cao (mm)">
                 </div>
             </div>
 
@@ -186,11 +206,21 @@
 
         <div class="preview-grid">
             <div class="pdf-box">
-                <h3>📖 ĐỌC FILE GỐC ĐÃ NHẬP</h3>
+                <div class="box-header">
+                    <h3>📖 FILE GỐC ĐÃ NHẬP</h3>
+                    <button id="openOriginalBtn" class="btn-small btn-outline" disabled>Mở rộng ↗</button>
+                </div>
                 <iframe id="originalPreview" title="PDF Gốc"></iframe>
             </div>
+
             <div class="pdf-box">
-                <h3>⚙️ TỆP SAU KHI THAY ĐỔI KÍCH THƯỚC</h3>
+                <div class="box-header">
+                    <h3>⚙️ TỆP SAU KHI THAY ĐỔI</h3>
+                    <div class="btn-group">
+                        <button id="openResultBtn" class="btn-small btn-outline" disabled>Mở rộng ↗</button>
+                        <button id="downloadResultBtn" class="btn-small" disabled>Tải xuống ↓</button>
+                    </div>
+                </div>
                 <iframe id="resultPreview" title="PDF Kết Quả"></iframe>
             </div>
         </div>
@@ -200,11 +230,9 @@
         const fileInput = document.getElementById('fileInput');
         const urlInput = document.getElementById('urlInput');
         const resizeType = document.getElementById('resizeType');
-        
         const scaleInput = document.getElementById('scaleInput');
         const standardSizeSelect = document.getElementById('standardSizeSelect');
         const customSizeGroup = document.getElementById('customSizeGroup');
-        
         const customWidth = document.getElementById('customWidth');
         const customHeight = document.getElementById('customHeight');
         
@@ -213,94 +241,132 @@
         const processBtn = document.getElementById('processBtn');
         const loadingText = document.getElementById('loadingText');
 
-        let currentFile = null;
+        // Các nút bấm mới thêm
+        const openOriginalBtn = document.getElementById('openOriginalBtn');
+        const openResultBtn = document.getElementById('openResultBtn');
+        const downloadResultBtn = document.getElementById('downloadResultBtn');
 
-        // Auto hiển thị/ẩn các ô nhập tùy chọn theo thiết lập của người dùng
+        let currentFile = null;
+        let originalUrlString = ""; // Lưu đường dẫn file gốc phục vụ nút Mở
+        let resultBlobTarget = null; // Lưu Blob đã xử lý để download
+
+        // Bộ lọc ẩn hiện ô nhập liệu
         resizeType.addEventListener('change', () => {
             scaleInput.style.display = 'none';
             standardSizeSelect.style.display = 'none';
             customSizeGroup.style.display = 'none';
-
-            if (resizeType.value === 'scale') {
-                scaleInput.style.display = 'block';
-            } else if (resizeType.value === 'standard') {
-                standardSizeSelect.style.display = 'block';
-            } else if (resizeType.value === 'custom') {
-                customSizeGroup.style.display = 'flex';
-            }
+            if (resizeType.value === 'scale') scaleInput.style.display = 'block';
+            else if (resizeType.value === 'standard') standardSizeSelect.style.display = 'block';
+            else if (resizeType.value === 'custom') customSizeGroup.style.display = 'flex';
         });
 
-        // Đọc và render file cục bộ từ máy lên giao diện
+        // Kích hoạt khi có file cục bộ
         fileInput.addEventListener('change', (e) => {
             const file = e.target.files[0];
             if (file) {
                 currentFile = file;
                 urlInput.value = ''; 
-                originalPreview.src = URL.createObjectURL(file);
+                
+                if(originalUrlString.startsWith("blob:")) URL.revokeObjectURL(originalUrlString);
+                originalUrlString = URL.createObjectURL(file);
+                
+                originalPreview.src = originalUrlString;
+                openOriginalBtn.disabled = false; // Kích hoạt nút Mở File Gốc
             }
         });
 
-        // Đọc URL từ xa
+        // Kích hoạt khi nhập Link URL từ xa
         urlInput.addEventListener('input', () => {
             const url = urlInput.value.trim();
             if (url) {
                 fileInput.value = ''; 
                 currentFile = null;
+                originalUrlString = url;
                 originalPreview.src = url;
+                openOriginalBtn.disabled = false; // Kích hoạt nút Mở File Gốc
+            } else {
+                openOriginalBtn.disabled = true;
             }
         });
 
-        // Gửi thông tin xử lý lên API Vercel Serverless
+        // Thao tác nút Mở rộng của File Gốc
+        openOriginalBtn.addEventListener('click', () => {
+            if (originalUrlString) window.open(originalUrlString, '_blank');
+        });
+
+        // Thao tác nút Mở rộng của File Kết Quả
+        openResultBtn.addEventListener('click', () => {
+            if (resultBlobTarget) {
+                const url = URL.createObjectURL(resultBlobTarget);
+                window.open(url, '_blank');
+            }
+        });
+
+        // Thao tác nút Tải xuống File Kết Quả
+        downloadResultBtn.addEventListener('click', () => {
+            if (resultBlobTarget) {
+                const url = URL.createObjectURL(resultBlobTarget);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'resized_document_' + new Date().getTime() + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        // Nút Gửi xử lý chính
         processBtn.addEventListener('click', async () => {
             const url = urlInput.value.trim();
             if (!currentFile && !url) {
-                alert('Vui lòng tải lên 1 file PDF hoặc dán link URL vào trước!');
+                alert('Vui lòng chọn file PDF hoặc dán đường dẫn URL vào trước!');
                 return;
             }
-
-            // Kiểm tra dữ liệu hợp lệ đối với tùy chọn custom kích thước mm
             if (resizeType.value === 'custom' && (!customWidth.value || !customHeight.value)) {
-                alert('Vui lòng nhập đầy đủ Chiều rộng và Chiều cao bằng đơn vị mm!');
+                alert('Vui lòng nhập đầy đủ Chiều rộng & Chiều cao (mm)!');
                 return;
             }
 
             processBtn.disabled = true;
             loadingText.style.display = 'block';
+            
+            openResultBtn.disabled = true;
+            downloadResultBtn.disabled = true;
             resultPreview.src = '';
 
             const formData = new FormData();
             formData.append('resizeType', resizeType.value);
-            
             if (currentFile) formData.append('pdfFile', currentFile);
             else if (url) formData.append('pdfUrl', url);
 
-            // Gắn gói dữ liệu tương ứng dựa theo bộ lọc
-            if (resizeType.value === 'scale') {
-                formData.append('scale', scaleInput.value);
-            } else if (resizeType.value === 'standard') {
-                formData.append('standardSize', standardSizeSelect.value);
-            } else if (resizeType.value === 'custom') {
+            if (resizeType.value === 'scale') formData.append('scale', scaleInput.value);
+            else if (resizeType.value === 'standard') formData.append('standardSize', standardSizeSelect.value);
+            else if (resizeType.value === 'custom') {
                 formData.append('customWidth', customWidth.value);
                 formData.append('customHeight', customHeight.value);
             }
 
             try {
-                const response = await fetch('/api/resize', {
-                    method: 'POST',
-                    body: formData
-                });
-
+                const response = await fetch('/api/resize', { method: 'POST', body: formData });
                 if (!response.ok) {
                     const err = await response.json();
-                    throw new Error(err.error || 'Lỗi từ hệ thống xử lý backend.');
+                    throw new Error(err.error || 'Lỗi xử lý.');
                 }
 
-                const blob = await response.blob();
-                resultPreview.src = URL.createObjectURL(blob);
+                // Lưu blob vào bộ nhớ ứng dụng
+                resultBlobTarget = await response.blob();
+                
+                // Hiển thị trực tiếp vào ô iframe kết quả
+                resultPreview.src = URL.createObjectURL(resultBlobTarget);
+                
+                // Giải phóng kích hoạt toàn bộ bộ nút thao tác kết quả
+                openResultBtn.disabled = false;
+                downloadResultBtn.disabled = false;
 
             } catch (error) {
                 console.error(error);
-                alert('Xảy ra sự cố khi scale PDF: ' + error.message);
+                alert('Gặp sự cố khi thay đổi kích thước PDF: ' + error.message);
             } finally {
                 processBtn.disabled = false;
                 loadingText.style.display = 'none';
