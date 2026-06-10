@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Resizer Tool - Khổ Giấy & Tùy Chỉnh</title>
+    <style>
+        :root {
+            --primary-blue: #007BFF;
+            --hover-blue: #0056b3;
+            --bg-light: #F4F7FA;
+            --white: #FFFFFF;
+            --border: #E0E7FF;
+            --text-dark: #333333;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+        }
+
+        .header {
+            background-color: var(--white);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 3px solid var(--primary-blue);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        .header h1 { color: var(--primary-blue); font-size: 1.8rem; }
+
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        /* Controls Section */
+        .controls {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        /* Hỗ trợ responsive dàn hàng ngang trên màn hình lớn */
+        @media (min-width: 992px) {
+            .controls {
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-items: center;
+            }
+            .controls > * { flex: 1; min-width: 180px; }
+            .dynamic-group { flex: 1.5; }
+        }
+
+        input[type="file"], input[type="url"], input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            outline: none;
+            font-size: 14px;
+            background-color: var(--white);
+        }
+
+        input:focus, select:focus { border-color: var(--primary-blue); }
+
+        /* Khung chứa các ô nhập động */
+        .dynamic-group {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .custom-size-inputs {
+            display: none; /* Ẩn mặc định */
+            gap: 10px;
+            width: 100%;
+        }
+
+        button {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            padding: 12px 25px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background 0.3s;
+            width: 100%;
+        }
+
+        @media (min-width: 992px) {
+            button { width: auto; min-width: 150px; }
+        }
+
+        button:hover { background-color: var(--hover-blue); }
+        button:disabled { background-color: #a0cbfc; cursor: not-allowed; }
+
+        /* Preview Windows Grid */
+        .preview-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .preview-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .pdf-box {
+            background: var(--white);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            height: 550px;
+        }
+
+        .pdf-box h3 {
+            color: var(--primary-blue);
+            margin-bottom: 12px;
+            text-align: center;
+            font-size: 15px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 8px;
+        }
+
+        iframe {
+            flex: 1;
+            width: 100%;
+            border: 1px dashed var(--border);
+            border-radius: 6px;
+            background-color: #f9f9f9;
+        }
+        
+        .loading { display: none; text-align: center; color: var(--primary-blue); margin: 10px 0; font-weight: bold;}
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>PDF Resizer & Custom Paper Size</h1>
+    </div>
+
+    <div class="container">
+        <div class="controls">
+            <input type="file" id="fileInput" accept="application/pdf">
+            <input type="url" id="urlInput" placeholder="Hoặc dán URL file PDF...">
+            
+            <select id="resizeType">
+                <option value="scale" selected>Thu nhỏ / Phóng to (%)</option>
+                <option value="standard">Chọn theo Khổ giấy chuẩn</option>
+                <option value="custom">Tùy chỉnh kích thước vật lý (mm)</option>
+            </select>
+
+            <div class="dynamic-group">
+                <input type="number" id="scaleInput" value="80" min="10" max="300" placeholder="Nhập % tỷ lệ (Ví dụ: 80)">
+                
+                <select id="standardSizeSelect" style="display: none;">
+                    <option value="A4" selected>Khổ A4 (210 x 297 mm)</option>
+                    <option value="A3">Khổ A3 (297 x 420 mm)</option>
+                    <option value="Letter">Khổ Letter (216 x 279 mm)</option>
+                </select>
+
+                <div id="customSizeGroup" class="custom-size-inputs">
+                    <input type="number" id="customWidth" placeholder="Rộng (mm)" min="1">
+                    <input type="number" id="customHeight" placeholder="Cao (mm)" min="1">
+                </div>
+            </div>
+
+            <button id="processBtn">Xử lý PDF</button>
+        </div>
+        
+        <div id="loadingText" class="loading">Đang biến đổi kích thước PDF, vui lòng đợi...</div>
+
+        <div class="preview-grid">
+            <div class="pdf-box">
+                <h3>📖 ĐỌC FILE GỐC ĐÃ NHẬP</h3>
+                <iframe id="originalPreview" title="PDF Gốc"></iframe>
+            </div>
+            <div class="pdf-box">
+                <h3>⚙️ TỆP SAU KHI THAY ĐỔI KÍCH THƯỚC</h3>
+                <iframe id="resultPreview" title="PDF Kết Quả"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const urlInput = document.getElementById('urlInput');
+        const resizeType = document.getElementById('resizeType');
+        
+        const scaleInput = document.getElementById('scaleInput');
+        const standardSizeSelect = document.getElementById('standardSizeSelect');
+        const customSizeGroup = document.getElementById('customSizeGroup');
+        
+        const customWidth = document.getElementById('customWidth');
+        const customHeight = document.getElementById('customHeight');
+        
+        const originalPreview = document.getElementById('originalPreview');
+        const resultPreview = document.getElementById('resultPreview');
+        const processBtn = document.getElementById('processBtn');
+        const loadingText = document.getElementById('loadingText');
+
+        let currentFile = null;
+
+        // Auto hiển thị/ẩn các ô nhập tùy chọn theo thiết lập của người dùng
+        resizeType.addEventListener('change', () => {
+            scaleInput.style.display = 'none';
+            standardSizeSelect.style.display = 'none';
+            customSizeGroup.style.display = 'none';
+
+            if (resizeType.value === 'scale') {
+                scaleInput.style.display = 'block';
+            } else if (resizeType.value === 'standard') {
+                standardSizeSelect.style.display = 'block';
+            } else if (resizeType.value === 'custom') {
+                customSizeGroup.style.display = 'flex';
+            }
+        });
+
+        // Đọc và render file cục bộ từ máy lên giao diện
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                currentFile = file;
+                urlInput.value = ''; 
+                originalPreview.src = URL.createObjectURL(file);
+            }
+        });
+
+        // Đọc URL từ xa
+        urlInput.addEventListener('input', () => {
+            const url = urlInput.value.trim();
+            if (url) {
+                fileInput.value = ''; 
+                currentFile = null;
+                originalPreview.src = url;
+            }
+        });
+
+        // Gửi thông tin xử lý lên API Vercel Serverless
+        processBtn.addEventListener('click', async () => {
+            const url = urlInput.value.trim();
+            if (!currentFile && !url) {
+                alert('Vui lòng tải lên 1 file PDF hoặc dán link URL vào trước!');
+                return;
+            }
+
+            // Kiểm tra dữ liệu hợp lệ đối với tùy chọn custom kích thước mm
+            if (resizeType.value === 'custom' && (!customWidth.value || !customHeight.value)) {
+                alert('Vui lòng nhập đầy đủ Chiều rộng và Chiều cao bằng đơn vị mm!');
+                return;
+            }
+
+            processBtn.disabled = true;
+            loadingText.style.display = 'block';
+            resultPreview.src = '';
+
+            const formData = new FormData();
+            formData.append('resizeType', resizeType.value);
+            
+            if (currentFile) formData.append('pdfFile', currentFile);
+            else if (url) formData.append('pdfUrl', url);
+
+            // Gắn gói dữ liệu tương ứng dựa theo bộ lọc
+            if (resizeType.value === 'scale') {
+                formData.append('scale', scaleInput.value);
+            } else if (resizeType.value === 'standard') {
+                formData.append('standardSize', standardSizeSelect.value);
+            } else if (resizeType.value === 'custom') {
+                formData.append('customWidth', customWidth.value);
+                formData.append('customHeight', customHeight.value);
+            }
+
+            try {
+                const response = await fetch('/api/resize', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json();
+                    throw new Error(err.error || 'Lỗi từ hệ thống xử lý backend.');
+                }
+
+                const blob = await response.blob();
+                resultPreview.src = URL.createObjectURL(blob);
+
+            } catch (error) {
+                console.error(error);
+                alert('Xảy ra sự cố khi scale PDF: ' + error.message);
+            } finally {
+                processBtn.disabled = false;
+                loadingText.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
