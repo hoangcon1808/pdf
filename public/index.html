@@ -6,14 +6,8 @@
     <title>Web Resize PDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --blue-primary: #1e40af;
-            --blue-light: #eff6ff;
-        }
-        body {
-            background-color: #f8fafc;
-            color: #334155;
-        }
+        :root { --blue-primary: #1e40af; --blue-light: #eff6ff; }
+        body { background-color: #f8fafc; color: #334155; }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 md:p-8">
@@ -22,7 +16,7 @@
         
         <div class="bg-blue-600 text-white text-center py-5">
             <h1 class="text-2xl md:text-3xl font-bold">HỆ THỐNG RESIZE PDF</h1>
-            <p class="text-blue-100 mt-2">Nhanh chóng - Tiện lợi - Tự động nhận diện thiết bị</p>
+            <p class="text-blue-100 mt-2">Nhanh chóng - Tiện lợi - API trên Vercel</p>
         </div>
 
         <div class="p-6 bg-blue-50 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -155,9 +149,7 @@
             const file = e.target.files[0];
             if (file) {
                 urlInput.value = '';
-                if (originalPdfUrl && originalPdfUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(originalPdfUrl);
-                }
+                if (originalPdfUrl && originalPdfUrl.startsWith('blob:')) URL.revokeObjectURL(originalPdfUrl);
                 originalPdfUrl = URL.createObjectURL(file);
                 showOriginalPreview(originalPdfUrl);
             }
@@ -167,9 +159,7 @@
             const url = e.target.value.trim();
             if (url) {
                 fileInput.value = '';
-                if (originalPdfUrl && originalPdfUrl.startsWith('blob:')) {
-                    URL.revokeObjectURL(originalPdfUrl);
-                }
+                if (originalPdfUrl && originalPdfUrl.startsWith('blob:')) URL.revokeObjectURL(originalPdfUrl);
                 originalPdfUrl = url;
                 showOriginalPreview(originalPdfUrl);
             }
@@ -231,7 +221,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert('Đã xảy ra lỗi khi xử lý. Vui lòng kiểm tra lại cấu hình CORS của URL hoặc file gốc.');
+                alert('Xảy ra lỗi! Lưu ý: Máy chủ Vercel miễn phí chỉ cho phép chạy tối đa 10s hoặc giới hạn dung lượng upload (4.5MB).');
                 loading.classList.add('hidden');
                 resizedPlaceholder.classList.remove('hidden');
             }
