@@ -6,27 +6,38 @@
     <title>Web Resize PDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* Tùy chỉnh màu chủ đạo Trắng - Xanh */
-        :root { --blue-primary: #1e40af; --blue-light: #eff6ff; }
-        body { background-color: #f8fafc; color: #334155; }
+        :root {
+            --blue-primary: #1e40af;
+            --blue-light: #eff6ff;
+        }
+        body {
+            background-color: #f8fafc;
+            color: #334155;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 md:p-8">
 
     <div class="w-full max-w-6xl bg-white shadow-xl rounded-xl overflow-hidden border border-blue-100">
+        
         <div class="bg-blue-600 text-white text-center py-5">
             <h1 class="text-2xl md:text-3xl font-bold">HỆ THỐNG RESIZE PDF</h1>
             <p class="text-blue-100 mt-2">Nhanh chóng - Tiện lợi - Tự động nhận diện thiết bị</p>
         </div>
 
         <div class="p-6 bg-blue-50 grid grid-cols-1 md:grid-cols-2 gap-6">
+            
             <div class="flex flex-col gap-4">
                 <label class="font-semibold text-blue-800">1. Nhập file PDF:</label>
-                <input type="file" id="fileInput" accept=".pdf" class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer">
+                <input type="file" id="fileInput" accept=".pdf" 
+                    class="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer">
+                
                 <div class="flex items-center gap-2">
-                    <span class="text-gray-400 font-medium">HOẶC</span>
+                    <span class="text-gray-400 text-sm font-medium">HOẶC</span>
                 </div>
-                <input type="url" id="urlInput" placeholder="Nhập đường dẫn URL PDF..." class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                
+                <input type="url" id="urlInput" placeholder="Nhập đường dẫn URL PDF rồi nhấn Enter..." 
+                    class="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
             </div>
 
             <div class="flex flex-col gap-4">
@@ -49,14 +60,15 @@
                 <div id="customSizeInputs" class="hidden grid-cols-2 gap-4">
                     <div>
                         <label class="text-sm text-gray-600">Chiều rộng (mm)</label>
-                        <input type="number" id="customW" placeholder="VD: 210" class="w-full px-3 py-2 border border-blue-200 rounded-lg">
+                        <input type="number" id="customW" placeholder="VD: 210" class="w-full px-3 py-2 mt-1 border border-blue-200 rounded-lg">
                     </div>
                     <div>
                         <label class="text-sm text-gray-600">Chiều cao (mm)</label>
-                        <input type="number" id="customH" placeholder="VD: 297" class="w-full px-3 py-2 border border-blue-200 rounded-lg">
+                        <input type="number" id="customH" placeholder="VD: 297" class="w-full px-3 py-2 mt-1 border border-blue-200 rounded-lg">
                     </div>
                 </div>
             </div>
+
         </div>
 
         <div class="p-4 flex justify-center bg-white border-b border-blue-100">
@@ -66,6 +78,7 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-blue-100">
+            
             <div class="p-6 flex flex-col gap-4">
                 <div class="flex justify-between items-center">
                     <h2 class="font-bold text-lg text-blue-800">Đọc file PDF gốc</h2>
@@ -87,28 +100,31 @@
                 </div>
                 <div class="w-full h-96 bg-white rounded-lg border border-blue-200 flex items-center justify-center overflow-hidden relative">
                     <span id="resizedPlaceholder" class="text-blue-300">Kết quả sẽ hiển thị tại đây</span>
+                    
                     <div id="loading" class="hidden absolute flex flex-col items-center">
-                        <svg class="animate-spin h-8 w-8 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        <svg class="animate-spin h-8 w-8 text-blue-600 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
                         <span class="text-blue-600 font-medium">Đang xử lý...</span>
                     </div>
+
                     <iframe id="resizedPreview" class="absolute inset-0 w-full h-full hidden"></iframe>
                 </div>
             </div>
+
         </div>
     </div>
 
     <script>
-        // DOM Elements
         const fileInput = document.getElementById('fileInput');
         const urlInput = document.getElementById('urlInput');
         const formatSelect = document.getElementById('formatSelect');
         const customSizeInputs = document.getElementById('customSizeInputs');
         const processBtn = document.getElementById('processBtn');
-        
         const originalPreview = document.getElementById('originalPreview');
         const originalPlaceholder = document.getElementById('originalPlaceholder');
         const openOriginalBtn = document.getElementById('openOriginalBtn');
-
         const resizedPreview = document.getElementById('resizedPreview');
         const resizedPlaceholder = document.getElementById('resizedPlaceholder');
         const loading = document.getElementById('loading');
@@ -118,7 +134,6 @@
         let originalPdfUrl = null;
         let resizedPdfUrl = null;
 
-        // Toggle Custom size inputs
         formatSelect.addEventListener('change', (e) => {
             if (e.target.value === 'Custom') {
                 customSizeInputs.classList.remove('hidden');
@@ -129,27 +144,6 @@
             }
         });
 
-        // Xử lý hiển thị ngay lập tức khi nhập file
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                urlInput.value = ''; // Xóa URL nếu chọn file
-                if(originalPdfUrl) URL.revokeObjectURL(originalPdfUrl);
-                originalPdfUrl = URL.createObjectURL(file);
-                showOriginalPreview(originalPdfUrl);
-            }
-        });
-
-        // Xử lý hiển thị ngay lập tức khi dán URL
-        urlInput.addEventListener('input', (e) => {
-            const url = e.target.value.trim();
-            if (url) {
-                fileInput.value = ''; // Xóa file nếu nhập URL
-                originalPdfUrl = url;
-                showOriginalPreview(originalPdfUrl);
-            }
-        });
-
         function showOriginalPreview(url) {
             originalPlaceholder.classList.add('hidden');
             originalPreview.src = url;
@@ -157,11 +151,34 @@
             openOriginalBtn.classList.remove('hidden');
         }
 
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                urlInput.value = '';
+                if (originalPdfUrl && originalPdfUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(originalPdfUrl);
+                }
+                originalPdfUrl = URL.createObjectURL(file);
+                showOriginalPreview(originalPdfUrl);
+            }
+        });
+
+        urlInput.addEventListener('change', (e) => {
+            const url = e.target.value.trim();
+            if (url) {
+                fileInput.value = '';
+                if (originalPdfUrl && originalPdfUrl.startsWith('blob:')) {
+                    URL.revokeObjectURL(originalPdfUrl);
+                }
+                originalPdfUrl = url;
+                showOriginalPreview(originalPdfUrl);
+            }
+        });
+
         openOriginalBtn.addEventListener('click', () => {
             if (originalPdfUrl) window.open(originalPdfUrl, '_blank');
         });
 
-        // Xử lý nút bấm API
         processBtn.addEventListener('click', async () => {
             const file = fileInput.files[0];
             const url = urlInput.value.trim();
@@ -171,13 +188,11 @@
                 alert('Vui lòng chọn file PDF hoặc nhập URL!');
                 return;
             }
-
             if (format === 'Custom' && (!document.getElementById('customW').value || !document.getElementById('customH').value)) {
                 alert('Vui lòng nhập đầy đủ Chiều rộng và Chiều cao!');
                 return;
             }
 
-            // Giao diện loading
             resizedPreview.classList.add('hidden');
             resizedPlaceholder.classList.add('hidden');
             loading.classList.remove('hidden');
@@ -189,61 +204,52 @@
             else formData.append('url', url);
             
             formData.append('format', format);
+            
             if (format === 'Custom') {
                 formData.append('width', document.getElementById('customW').value);
                 formData.append('height', document.getElementById('customH').value);
             }
 
             try {
-                // Gọi API tới Backend
                 const response = await fetch('/api/resize', {
                     method: 'POST',
                     body: formData
                 });
 
                 if (!response.ok) throw new Error('Lỗi xử lý từ máy chủ');
-
+                
                 const blob = await response.blob();
-                if(resizedPdfUrl) URL.revokeObjectURL(resizedPdfUrl);
+                
+                if (resizedPdfUrl) URL.revokeObjectURL(resizedPdfUrl);
                 resizedPdfUrl = URL.createObjectURL(blob);
 
-                // Hiển thị kết quả
                 loading.classList.add('hidden');
                 resizedPreview.src = resizedPdfUrl;
                 resizedPreview.classList.remove('hidden');
-                
                 openResizedBtn.classList.remove('hidden');
                 downloadBtn.classList.remove('hidden');
 
             } catch (error) {
                 console.error(error);
-                alert('Đã xảy ra lỗi khi xử lý. Vui lòng kiểm tra lại (Lưu ý: URL cần phải hỗ trợ CORS hoặc file không được hỏng).');
+                alert('Đã xảy ra lỗi khi xử lý. Vui lòng kiểm tra lại cấu hình CORS của URL hoặc file gốc.');
                 loading.classList.add('hidden');
                 resizedPlaceholder.classList.remove('hidden');
             }
         });
 
-        // Nút mở file Resize
         openResizedBtn.addEventListener('click', () => {
             if (resizedPdfUrl) window.open(resizedPdfUrl, '_blank');
         });
 
-        // Nút tải xuống: Bấm tải xuống và mở file ra ngay lập tức
         downloadBtn.addEventListener('click', () => {
             if (!resizedPdfUrl) return;
-            
-            // 1. Tải xuống
+            window.open(resizedPdfUrl, '_blank');
             const a = document.createElement('a');
             a.href = resizedPdfUrl;
             a.download = `Resized_${formatSelect.value}.pdf`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-
-            // 2. Mở ra trong tab mới
-            setTimeout(() => {
-                window.open(resizedPdfUrl, '_blank');
-            }, 500);
         });
     </script>
 </body>
