@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Resize PDF</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/pdf-lib@1.17.1/dist/pdf-lib.min.js"></script>
     <style>
         :root { --blue-primary: #1e40af; --blue-light: #eff6ff; }
         body { background-color: #f8fafc; color: #334155; }
@@ -16,7 +17,7 @@
         
         <div class="bg-blue-600 text-white text-center py-5">
             <h1 class="text-2xl md:text-3xl font-bold">HỆ THỐNG RESIZE PDF</h1>
-            <p class="text-blue-100 mt-2">Nhanh chóng - Tiện lợi - API trên Vercel</p>
+            <p class="text-blue-100 mt-2">Nhanh chóng - Tiện lợi - Bypass Limit Vercel</p>
         </div>
 
         <div class="p-6 bg-blue-50 grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -100,7 +101,7 @@
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        <span class="text-blue-600 font-medium">Đang xử lý...</span>
+                        <span class="text-blue-600 font-medium" id="loadingText">Đang xử lý...</span>
                     </div>
 
                     <iframe id="resizedPreview" class="absolute inset-0 w-full h-full hidden"></iframe>
@@ -122,11 +123,19 @@
         const resizedPreview = document.getElementById('resizedPreview');
         const resizedPlaceholder = document.getElementById('resizedPlaceholder');
         const loading = document.getElementById('loading');
+        const loadingText = document.getElementById('loadingText');
         const openResizedBtn = document.getElementById('openResizedBtn');
         const downloadBtn = document.getElementById('downloadBtn');
 
         let originalPdfUrl = null;
         let resizedPdfUrl = null;
+
+        const PAPER_SIZES = {
+            A0: [2384, 3370], A1: [1684, 2384], A2: [1191, 1684],
+            A3: [842, 1191], A4: [595, 842], A5: [420, 595],
+            A6: [298, 420], A7: [210, 298], A8: [147, 210],
+            A9: [105, 147], A10: [74, 105]
+        };
 
         formatSelect.addEventListener('change', (e) => {
             if (e.target.value === 'Custom') {
@@ -178,41 +187,75 @@
                 alert('Vui lòng chọn file PDF hoặc nhập URL!');
                 return;
             }
-            if (format === 'Custom' && (!document.getElementById('customW').value || !document.getElementById('customH').value)) {
-                alert('Vui lòng nhập đầy đủ Chiều rộng và Chiều cao!');
-                return;
+
+            let newWidth, newHeight;
+            if (format === 'Custom') {
+                const w = document.getElementById('customW').value;
+                const h = document.getElementById('customH').value;
+                if (!w || !h) {
+                    alert('Vui lòng nhập đầy đủ Chiều rộng và Chiều cao!');
+                    return;
+                }
+                newWidth = parseFloat(w) * 2.83465;
+                newHeight = parseFloat(h) * 2.83465;
+            } else {
+                [newWidth, newHeight] = PAPER_SIZES[format];
             }
 
+            // UI Loading setup
             resizedPreview.classList.add('hidden');
             resizedPlaceholder.classList.add('hidden');
             loading.classList.remove('hidden');
             openResizedBtn.classList.add('hidden');
             downloadBtn.classList.add('hidden');
 
-            const formData = new FormData();
-            if (file) formData.append('file', file);
-            else formData.append('url', url);
-            
-            formData.append('format', format);
-            
-            if (format === 'Custom') {
-                formData.append('width', document.getElementById('customW').value);
-                formData.append('height', document.getElementById('customH').value);
-            }
-
             try {
-                const response = await fetch('/api/resize', {
-                    method: 'POST',
-                    body: formData
-                });
+                // CHIẾN THUẬT 1: NẾU LÀ FILE -> XỬ LÝ TRỰC TIẾP TRÊN TRÌNH DUYỆT (Bypass Vercel 4.5MB limit)
+                if (file) {
+                    loadingText.innerText = "Đang xử lý cục bộ...";
+                    
+                    const arrayBuffer = await file.arrayBuffer();
+                    const { PDFDocument } = PDFLib;
+                    
+                    const originalPdf = await PDFDocument.load(arrayBuffer);
+                    const newPdf = await PDFDocument.create();
+                    
+                    const embeddedPages = await newPdf.embedPdf(originalPdf);
+                    for (const embeddedPage of embeddedPages) {
+                        const page = newPdf.addPage([newWidth, newHeight]);
+                        page.drawPage(embeddedPage, {
+                            x: 0, y: 0,
+                            width: newWidth, height: newHeight,
+                        });
+                    }
 
-                if (!response.ok) throw new Error('Lỗi xử lý từ máy chủ');
-                
-                const blob = await response.blob();
-                
-                if (resizedPdfUrl) URL.revokeObjectURL(resizedPdfUrl);
-                resizedPdfUrl = URL.createObjectURL(blob);
+                    const pdfBytes = await newPdf.save();
+                    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+                    
+                    if (resizedPdfUrl) URL.revokeObjectURL(resizedPdfUrl);
+                    resizedPdfUrl = URL.createObjectURL(blob);
+                } 
+                // CHIẾN THUẬT 2: NẾU LÀ URL -> GỬI LÊN BACKEND NODE.JS VERCEL (Không bị limit vì payload URL rất nhẹ)
+                else if (url) {
+                    loadingText.innerText = "Đang gọi máy chủ xử lý...";
+                    
+                    const formData = new FormData();
+                    formData.append('url', url);
+                    formData.append('format', format);
+                    if (format === 'Custom') {
+                        formData.append('width', document.getElementById('customW').value);
+                        formData.append('height', document.getElementById('customH').value);
+                    }
 
+                    const response = await fetch('/api/resize', { method: 'POST', body: formData });
+                    if (!response.ok) throw new Error('Lỗi từ máy chủ Backend');
+                    
+                    const blob = await response.blob();
+                    if (resizedPdfUrl) URL.revokeObjectURL(resizedPdfUrl);
+                    resizedPdfUrl = URL.createObjectURL(blob);
+                }
+
+                // Thành công: Hiển thị kết quả
                 loading.classList.add('hidden');
                 resizedPreview.src = resizedPdfUrl;
                 resizedPreview.classList.remove('hidden');
@@ -221,7 +264,7 @@
 
             } catch (error) {
                 console.error(error);
-                alert('Xảy ra lỗi! Lưu ý: Máy chủ Vercel miễn phí chỉ cho phép chạy tối đa 10s hoặc giới hạn dung lượng upload (4.5MB).');
+                alert('Xảy ra lỗi trong quá trình xử lý! ' + error.message);
                 loading.classList.add('hidden');
                 resizedPlaceholder.classList.remove('hidden');
             }
